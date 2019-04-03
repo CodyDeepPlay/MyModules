@@ -42,3 +42,33 @@ def fftExample():
     plt.xlabel('frequency')
     plt.grid()
     plt.show()
+
+
+
+
+
+
+
+#%%  how to run a piece of code and check it is running time
+
+import timeit
+        
+SETUP_CODE = ''' 
+import EMGModule
+import numpy as np
+detect_start = 24
+detect_end   = 96
+my_wave = np.random.randint( -100 , high= 100, size = 257 )
+'''
+      
+TEST_CODE = ''' 
+threshold_res_label = EMGModule.TimeDomainTh(my_wave, detect_start, detect_end, care_noise='yes')  '''
+
+# timeit.repeat statement 
+times = timeit.repeat(setup = SETUP_CODE, 
+                          stmt = TEST_CODE, 
+                          repeat = 3, 
+                          number = 100) 
+             
+print('NormWave processing time: {}'.format(np.mean(times)))
+        

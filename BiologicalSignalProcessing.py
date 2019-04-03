@@ -14,6 +14,7 @@ from six.moves import cPickle as pickle
 import pandas as pd
 from scipy import signal
 from detect_peaks import detect_peaks  # a customized function downloaded online
+import math
 
 # BELOW ARE CUSTOMIZED FUNCTIONS
 ##########################################################################################################
@@ -460,17 +461,33 @@ def myfft(*args):
 
 
 
-def myRMS(mysignal):
+def myRMS(mysignal, TW=1):
     """
     calculate the root mean square of a given time series
     INPUT: 
     mysignal, the time series that you want to calculate, a numpy array
+    TW,       how many time window does the user wants to break the signal into
     OUTPUT:
     rms,    the rms value of a signal
     """
-    n      = len(mysignal)
+    n = len(mysignal)   # total length of the input signal
     square = mysignal**2
-    rms    = np.sqrt(np.sum(square)/n)
+
+    # the user wants to preserve the input signal as a whole to calculate its RMS value
+    if TW == 1:  
+        rms    = np.sqrt(np.sum(square)/n)
+    # the user wants to break the input signal into many smaller time windows    
+    else:
+        rms_values = np.zeros(TW)  # prelocate space to save each RMS values for each small time window
+        TW_tail = math.ceil(n/TW)  # floor division
+        
+        for which_TW in range(0,TW-1): # preserve the last time window and will calculate later
+            rms_values[which_TW] = np.sqrt( np.sum(square[which_TW*TW_tail : (which_TW+1)*TW_tail]) /TW_tail )
+        
+        # calculate the RMS value for the last time window
+        rms_values[TW-1] = np.sqrt( np.sum(square[(TW-1)*TW_tail : n])/(n-(TW-1)*TW_tail) )
+        rms = np.mean(rms_values)        
+ 
     return rms
 
 
@@ -792,6 +809,48 @@ def myFilter(*args):
 
 
 
+def MovAvg(signal, MA_win = 2):
+    """
+    The function takes an input signal, and conduct the moving average of the signal, the moving average window
+    is given by the user. At the beginning of the window, when there is not enough data points as the window 
+    requires, the function average from the first data point to the current data point; when there is enough
+    data point availbe compared to the entire required time window, the function average the time window worth
+    of data, and save the data point as the current data point for the processed time series. 
+    
+    signal, the input signal that user wants to analyze
+    MA_win, the time window that the user wants to conduct the moving average,
+            default setting is 2.
+        
+    
+    MA_signal, the processed signal after moving avergae was conducted
+    """
+    
+    MA_signal = np.zeros(signal.shape)
+    # the default moving average time window is 2
+    if MA_win == 2:
+        for n in range(0, len(signal)):
+            if n< MA_win-1:
+                MA_signal[n] = signal[n]/MA_win # when there is no enough data point as the MA_win requires
+            else:
+                MA_signal[n] = np.sum(signal[n-1:n+1]) /MA_win # averga 2 data points as required
 
+    else: # the user gives a moving average time window
+        """
+        MA_signal[0] = signal[0] # when there is not enough data points as the MA_win requires 
+        for n in range(1, len(signal)):
+            if n < MA_win-1:
+                MA_signal[n] = np.sum(signal[0:n]) /(n+1) # when there is no enough data point as the MA_win requires
+            elif n >= MA_win-1:
+                MA_signal[n] = np.sum(signal[n-MA_win : n]) /MA_win # averga data points as required time window
+        """
+        
+        #MA_signal[0] = signal[0] # when there is not enough data points as the MA_win requires 
+        for n in range(0, len(signal)):
+            if n < MA_win-1:
+                MA_signal[n] = np.sum(signal[0:n]) /MA_win # when there is no enough data point as the MA_win requires
+            elif n >= MA_win-1:
+                MA_signal[n] = np.sum(signal[n-MA_win : n]) /MA_win # averga data points as required time window
+
+    return MA_signal
 
 
