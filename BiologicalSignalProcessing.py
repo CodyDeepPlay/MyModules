@@ -14,6 +14,11 @@ from six.moves import cPickle as pickle
 import pandas as pd
 from scipy import signal
 from detect_peaks import detect_peaks  # a customized function downloaded online
+from sklearn.linear_model import LinearRegression
+from sklearn import metrics
+from sklearn.preprocessing import PolynomialFeatures
+
+
 import math
 
 # BELOW ARE CUSTOMIZED FUNCTIONS
@@ -733,7 +738,7 @@ def EMGFeatureEng(signal_matrix, Fs):
 
 """
 Normalize the features in the input data
-Within each feature, the data will be normalized by minus the mean, and devide by the std of that feature
+Within each feature, the data will be normalized by minus the mean, and devide by the STD of that feature
 INPUT:
     features: the input DataFrame, the field names are the features; 
               the index is the number of observations.
@@ -821,10 +826,8 @@ def MovAvg(signal, MA_win = 2):
     MA_win, the time window that the user wants to conduct the moving average,
             default setting is 2.
         
-    
     MA_signal, the processed signal after moving avergae was conducted
-    """
-    
+    """    
     MA_signal = np.zeros(signal.shape)
     # the default moving average time window is 2
     if MA_win == 2:
@@ -854,3 +857,145 @@ def MovAvg(signal, MA_win = 2):
     return MA_signal
 
 
+
+
+######## CLASS PlotFigure WITH ALL OF HIS METHODS FOR PLOT DIFFERENT TYPES OF FIGURES #######
+
+class PlotFigure:
+    
+    '''
+    Everytime create an instance of the object for class PlotFigure, 
+    python will run it through the first method __int__()
+    '''
+    def __int__(self, signalx, signaly=None):
+        self.signalx = signalx
+        self.signaly = signaly
+    
+    
+    def plot_linear_regress(self, performance = False):
+        '''
+        given data signalx and signaly, 
+        create the linear regression of signalx, and plot the regression line on
+        top of the raw data points
+        
+        If you wish to see the print out of the performance of the predict,
+        set performance = True;
+        Otherwise, it is default value is false.
+        '''
+        signalx = self.signalx 
+        signaly = self.signaly
+        
+        # make sure both numpy arrays have finite numbers
+        finite_ID = np.where(np.isfinite(signalx) & np.isfinite(signaly))
+
+        # reshape the data to meet the format requirement for model fitting,
+        # [# samples, # features] 
+        plotx = np.reshape(signalx[finite_ID], (len(signalx[finite_ID]),1))
+        ploty = np.reshape(signaly[finite_ID], (len(signaly[finite_ID]),1))
+
+        # use linear regress to find the model fit line
+        linear_regressor = LinearRegression()
+        linear_regressor.fit(plotx, ploty)
+        Y_predict = linear_regressor.predict(plotx)
+
+        # plot the original data points and its linear regression line
+        plt.figure()
+        plt.scatter(plotx, ploty, marker = 'o', hold=True)
+        plt.plot(plotx, Y_predict, color = 'red')
+        plt.title('Linear regression with raw data')
+        
+        # plot residual plot
+        residual = ploty - Y_predict
+        plt.figure()
+        plt.scatter(Y_predict, residual, color = 'red',  marker = 'o', hold=True)
+        y_zeros = np.zeros(Y_predict.shape) 
+        plt.plot(np.sort(np.squeeze(Y_predict)), y_zeros, color = 'black', hold=True)
+        plt.xlabel('Fitted value')
+        plt.ylabel('Residual')
+        plt.title('Versus Fits')
+        
+        # print model performance as user requires
+        if performance:
+            rmse = metrics.mean_squared_error(ploty, Y_predict)
+            print('Root Mean Squrea Error is ' + str(rmse) + '\n')
+            r2 = metrics.r2_score(ploty,Y_predict)
+            print('R2 score is: ' + str(r2) + '\n')
+    
+    
+    def plot_polynomial_regress(self, order=2, performance = False):
+        '''
+        given data signalx and signaly, 
+        create the polynomial regression of signalx, and plot the regression line on
+        top of the raw data points
+        Default order of polynomial fit is 2nd order, user can change it to higher order it he/she wants
+        '''
+        signalx = self.signalx 
+        signaly = self.signaly
+        # make sure both numpy arrays have finite numbers
+        finite_ID = np.where(np.isfinite(signalx) & np.isfinite(signaly))
+
+        # reshape the data to meet the format requirement for model fitting,
+        # [# samples, # features] 
+        plotx = np.reshape(signalx[finite_ID], (len(signalx[finite_ID]),1))
+        ploty = np.reshape(signaly[finite_ID], (len(signaly[finite_ID]),1))
+
+        # use polynomial regress to find the best fit line
+        polynomial_features= PolynomialFeatures(degree=order)  # 2nd order of polynomial fit by default
+        x_poly = polynomial_features.fit_transform(plotx)
+    
+        model = LinearRegression()
+        model.fit(x_poly, ploty)
+        y_poly_pred = model.predict(x_poly)
+    
+        plt.figure()
+        plt.scatter(plotx, ploty, marker = 'o', hold=True)               
+        sorted_plotx = np.sort(plotx, axis=0)
+        sorted_ID    = np.argsort(np.squeeze(plotx))      
+        sorted_ploty = y_poly_pred[sorted_ID]        
+        plt.plot(sorted_plotx, sorted_ploty, linestyle = 'dashed', color ='red')
+        plt.title(str(order) + 'nd order polynomial regression with raw data')
+       
+        # plot residual plot
+        residual = ploty - y_poly_pred
+        plt.figure()
+        plt.scatter(y_poly_pred, residual, color = 'red',  marker = 'o', hold=True)
+        y_zeros = np.zeros(y_poly_pred.shape) 
+        plt.plot(np.sort(np.squeeze(y_poly_pred)), y_zeros, color = 'black', hold=True)
+        plt.xlabel('Fitted value')
+        plt.ylabel('Residual')
+        plt.title('Versus Fits')
+               
+        # print model performance as user requires
+        if performance:
+            rmse = np.sqrt(metrics.mean_squared_error(ploty,y_poly_pred))
+            r2 = metrics.r2_score(ploty,y_poly_pred)
+            print('Root Mean Squrea Error is: ' + str(rmse) + '\n')
+            print('R2 score is: ' + str(r2) + '\n')
+               
+            
+    def yes_no_his(self):
+        '''
+        input_yes_no: an input string with two types, i.e. yes and no
+        '''
+        input_yes_no = self.signalx
+        loc_array = np.zeros(input_yes_no.shape, dtype=float)
+        first = list(set(input_yes_no))[0]  # what is the first element in the set
+        second = list(set(input_yes_no))[1] # what is the 2nd element in the set
+        
+        for pos, val in enumerate(input_yes_no):
+            if val == first:
+                loc_array[pos] = float(0)
+            elif val == second:
+                loc_array[pos] = float(1)
+        plt.figure()
+        plt.hist(loc_array, align='left')
+        plt.xticks([0, 1], [first, second])        
+            
+            
+            
+            
+            
+            
+            
+            
+            
