@@ -12,21 +12,22 @@ Created on Fri Aug 24 14:00:33 2018
 
 
 #%%
-"""
-Given a list, this function is removing the empty elements in the list and return a list with all the 
-real content in there.
-Usage:
-    (wanted_list, wanted_index) = removeEnptyList(inputlist, unwanted_list)
-    unwanted_list, is an optional input, default option is to remove empty list
 
-INPUT:
-    inputlist:     the list one wants to operate 
-    unwanted_list: the list that we don't want
-OUTPUT:
-    wanted_list:   the returned list with unwanted contents removed
-    wanted_index   the index from the original list, where there is wanted contents
-"""
 def removeList(*args):
+    """
+    Given a list, this function is removing the empty elements in the list and return a list with all the 
+    real content in there.
+    Usage:
+        (wanted_list, wanted_index) = removeEnptyList(inputlist, unwanted_list)
+        unwanted_list, is an optional input, default option is to remove empty list
+
+    INPUT:
+        inputlist:     the list one wants to operate 
+        unwanted_list: the list that we don't want
+    OUTPUT:
+        wanted_list:   the returned list with unwanted contents removed
+        wanted_index   the index from the original list, where there is wanted contents
+"""
     
     for count, content in enumerate(args):
         if count == 0:
@@ -49,43 +50,76 @@ def removeList(*args):
 
 
 #%%
-"""
-Given a long string, return a new string with the unwanted characters deleted
-Usage:
-    new_str = deleteStr(input_str, unwanted_cha)
-    
-INPUT:
-    input_str: the input string
-    unwanted_cha: unwanted characters, a string
-OUTPUT:
-    new_str: the output with the unwanted string deleted, 
-             this is a string
-"""
+###############################################################################
+###########                 String Operation        ###########################
+###############################################################################
+
+
 def deleteStr(input_str, unwanted_cha):
+    """
+    Given a long string, return a new string with the unwanted characters deleted
+    Usage:
+        new_str = deleteStr(input_str, unwanted_cha)
     
+    INPUT:
+        input_str: the input string
+        unwanted_cha: unwanted characters, a string
+    OUTPUT:
+        new_str: the output with the unwanted string deleted, 
+             this is a string
+    """
     input_str_sep = input_str.split(unwanted_cha)   # spilt the larger string with the given unwanted string
     new_str_list, _ = removeList( input_str_sep )   # remove empty list
     new_str = new_str_list[0] # there is only one content in the list, just get the string and return it, instead of a list
     return new_str    
     
 
+
+def deleteZeroHead(input_str):
+    """
+    Remove the begining "0" string given an input_str.
+    When use pandas to read the data from an CSV file, the obtained data is in string format.
+    Sometimes a number 116 will appear as "0116" as the string obtain from the data table. 
+    This function is help to remove the zero at the begining, and turn "0116" to "116"
+    
+    INPUT:
+        input_str: the input, should be a string
+    
+    """
+    if input_str[0] == '0':  # the first string is a "0" string, then delete it
+       input_str = input_str[1:]
+      
+    return input_str
+
+
+def deleteAChar(input_str):
+    '''
+    Delete a given character in a string
+    '''
+
+
+
 #%%
-"""
-Convert heximal number to signed integer number
-Usage:
-deci_data = Hex2DecSign (Hex, bits)
+###############################################################################
+######   HEX, BINARY, DECIMAL NUMBER CONVERTION AND OPERATION           #######
+###############################################################################
 
-INPUT:
-    Hex: the input hex number that needs to be computed,
-         needs to be string
-    bits: integers, indicate the bits of the input signal
+def Hex2DecSign (Hex, bits):  
+    """
+    Convert heximal number to signed integer number
+    Usage:
+        deci_data = Hex2DecSign (Hex, bits)
 
-OUTPUT:
-    sign_deci: the output signed integer data 
+    INPUT:
+        Hex: the input hex number that needs to be computed,
+             needs to be string
+        bits: integers, indicate the bits of the input signal
+
+    OUTPUT:
+        sign_deci: the output signed integer data 
                only return a signed decimal number if the input bits is correct;
                will return an error message if the input bits is wrong.
-"""
-def Hex2DecSign (Hex, bits):    
+    """
     # create a python dictionary to put all the bits converter here
     switcher = {
     8: bits_8(Hex, bits),
@@ -133,18 +167,19 @@ def bits_64(Hex, bits):
 
 
 
-#%%
-"""
-This series of function turns the input of HEX number into a signed decimal number
-Usage:
-    my_signed_number = hex2data(raw_bytes)
 
-INPUT:
-    raw_bytes: bytes of HEX number, as a string input, i.e.'FFF5B0'
-OUTPUT:
-    my_signed_number: the signed decimal number, an int number
-"""
-def hex2dec(hex_bytes):   
+
+def hex2dec(hex_bytes):
+    """
+    This series of function turns the input of HEX number into a signed decimal number
+    Usage:
+        my_signed_number = hex2data(raw_bytes)
+
+    INPUT:
+        raw_bytes: bytes of HEX number, as a string input, i.e.'FFF5B0'
+    OUTPUT:
+        my_signed_number: the signed decimal number, an int number
+    """
     binary_bits = bin(int(hex_bytes,16))   # convert raw HEX into binary bits        
     # sometimes, the first two bits are '0b' to indicate it is a binary format number
     if binary_bits[0:2] == '0b':
@@ -170,29 +205,30 @@ def hex2dec(hex_bytes):
          my_signed_number = - ( int(output_bits, 2) + 1 )
      
     return my_signed_number   
-
-  
-"""
-For a binary input data, reverse each bit. 
-Usage:
-    output_bits = reverse_bits(input_bits)
+ 
+     
+def reverse_bits(input_bits): 
+    """
+    For a binary input data, reverse each bit. 
+    Usage:
+        output_bits = reverse_bits(input_bits)
     
-INPUT:
-    input_bits: the input binary data, a string
-OUTPUT:
-    output_bits: the output binary data with each bit reversed,
-    a string.        
-"""        
-def reverse_bits(input_bits):   
+    INPUT:
+        input_bits: the input binary data, a string
+    OUTPUT:
+        output_bits: the output binary data with each bit reversed,
+        a string.        
+    """   
     output_bits = ""
     for bit in input_bits:        
         output_bits += reverse_1_bit(bit)
     return output_bits  
 
-"""
-Given one bit of binary data, reverse this bit. 
-"""
-def reverse_1_bit(input_bit):      
+
+def reverse_1_bit(input_bit): 
+    """
+    Given one bit of binary data, reverse this bit. 
+    """     
     if input_bit == '1':
         output_bit = '0'
     elif input_bit == '0':

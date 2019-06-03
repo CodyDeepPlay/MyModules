@@ -449,7 +449,7 @@ def myfft(*args):
     n = int(signal_length)
     #Y1 = np.fft.fft(signal)/n # fft computing and normalization
     Y1 = np.fft.fft(signal) # fft computing
-    Y = Y1[0:round(n/2)] # Fourier Transform of the original signal, only get one side of its frequency range since it mirror image 
+    Y = Y1[0:round(n/2)] # Fourier Transform of the original signal, only get one side of its frequency range since it is mirror image 
 
     #Ts = 1.0/Fs; # sampling interval
     #t = np.arange(signal_length)*Ts
@@ -973,14 +973,25 @@ class PlotFigure:
             print('R2 score is: ' + str(r2) + '\n')
                
             
-    def yes_no_his(self):
+    def yes_no_his(self, first='', second=''):
         '''
         input_yes_no: an input string with two types, i.e. yes and no
+        self.signalx: the input data should be a list of strings
+        
+        first: user wants to define what is the string to be displayed in 
+                first column in the figure
+        second: user wants to define what is the string to be displayed in 
+                the second column in the figure
         '''
         input_yes_no = self.signalx
+               
         loc_array = np.zeros(input_yes_no.shape, dtype=float)
-        first = list(set(input_yes_no))[0]  # what is the first element in the set
-        second = list(set(input_yes_no))[1] # what is the 2nd element in the set
+        
+        # if user never defined what first and second string should be
+        # then let the program to select the first and second string to be displayed in the figure
+        if not first or not second:        
+            first = list(set(input_yes_no))[0]  # what is the first element in the set
+            second = list(set(input_yes_no))[1] # what is the 2nd element in the set
         
         for pos, val in enumerate(input_yes_no):
             if val == first:

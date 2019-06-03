@@ -72,3 +72,74 @@ times = timeit.repeat(setup = SETUP_CODE,
              
 print('NormWave processing time: {}'.format(np.mean(times)))
         
+
+
+
+
+#%%  how to plot and display time series signal in real time
+
+x = np.linspace(0, 6*np.pi, 100)
+y = np.sin(x)
+
+plt.ion()  # turn the interactive mode on
+
+fig = plt.figure(1)  # an instance of a figure plotting object
+plt.clf()            # clear anything on current figure
+# add an Axes instance to the figure as part of a subplot arrangement
+ax     = fig.add_subplot(111) # Either a 3-digit integer or three separate integers describing the position of the subplot
+line1, = ax.plot(x, y, 'r-')  # Returns a tuple of line objects, thus the comma
+
+for phase in np.linspace(0, 10*np.pi, 100):
+    line1.set_ydata(np.sin(x + phase)) # update the ydata for next frame display
+    fig.canvas.draw()                  # update the figure that has been altered
+    fig.canvas.flush_events()    # speed up matplotlib plotting times
+
+    
+#%%  how to take the input from key board typing
+
+from pynput.keyboard import Key, Listener
+
+def on_press(key):
+    print('{0} pressed'.format(
+        key))
+    if key == Key.esc:
+        # Stop listener
+        return False
+
+def on_release(key):
+    #string = ('{0} release'.format(
+      #  key))
+    print('{0} release'.format(
+        key))
+    if key == Key.esc:
+        # Stop listener
+        return False
+
+# Collect events until released
+with Listener(
+        on_press=on_press,
+        on_release=on_release) as listener:
+    listener.join()
+
+
+#%%  how to plot and display signals real time
+
+x = np.linspace(0, 6*np.pi, 100)
+y = np.sin(x)
+
+plt.ion()  # turn the interactive mode on
+
+fig = plt.figure(1)  # an instance of a figure plotting object
+plt.clf()            # clear anything on current figure
+# add an Axes instance to the figure as part of a subplot arrangement
+ax     = fig.add_subplot(111) # Either a 3-digit integer or three separate integers describing the position of the subplot
+line1, = ax.plot(x, y, 'r-')  # Returns a tuple of line objects, thus the comma
+
+for phase in np.linspace(0, 10*np.pi, 100):
+    
+    line1.set_ydata(np.sin(x + phase)) # update the ydata for next frame display
+    fig.canvas.draw()                  # update the figure that has been altered
+    fig.canvas.flush_events()    # speed up matplotlib plotting times
+
+
+
