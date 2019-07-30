@@ -814,47 +814,112 @@ def myFilter(*args):
 
 
 
-def MovAvg(signal, MA_win = 2):
+def MovAvg(signal, MA_win=2, hull_avg=False, early_method=0):
     """
     The function takes an input signal, and conduct the moving average of the signal, the moving average window
-    is given by the user. At the beginning of the window, when there is not enough data points as the window 
-    requires, the function average from the first data point to the current data point; when there is enough
-    data point availbe compared to the entire required time window, the function average the time window worth
-    of data, and save the data point as the current data point for the processed time series. 
+    is given by the user. 
+    At the beginning of the window, when there is no enough data points as the window 
+    requires, the function average from the first data point to the current data point; 
+    when there is enough data point availabe compared to the entire required time window, 
+    the function average the time window worth of data, and save the data point as 
+    the current data point for the processed time series. 
     
     signal, the input signal that user wants to analyze
     MA_win, the time window that the user wants to conduct the moving average,
             default setting is 2.
+    early_method, what type of MA you wants to apply when there is not enough data points at the begnning as the time window requires,            
+            0, moving average with early data points averaged to the number of available data points 
+            1, moving average with early data points averaged to the time window length
         
+    hull_avg,  True, conduct Hull Moving Average; False, conduct reguliar Moving Average.
+    
+    
     MA_signal, the processed signal after moving avergae was conducted
     """    
     MA_signal = np.zeros(signal.shape)
-    # the default moving average time window is 2
-    if MA_win == 2:
-        for n in range(0, len(signal)):
-            if n< MA_win-1:
-                MA_signal[n] = signal[n]/MA_win # when there is no enough data point as the MA_win requires
-            else:
-                MA_signal[n] = np.sum(signal[n-1:n+1]) /MA_win # averga 2 data points as required
 
-    else: # the user gives a moving average time window
-        """
-        MA_signal[0] = signal[0] # when there is not enough data points as the MA_win requires 
-        for n in range(1, len(signal)):
-            if n < MA_win-1:
-                MA_signal[n] = np.sum(signal[0:n]) /(n+1) # when there is no enough data point as the MA_win requires
-            elif n >= MA_win-1:
-                MA_signal[n] = np.sum(signal[n-MA_win : n]) /MA_win # averga data points as required time window
-        """
-        
-        #MA_signal[0] = signal[0] # when there is not enough data points as the MA_win requires 
+    # if user requires to conduct Hull Moving Average, then condict Hull MA, and task is done
+    if hull_avg:
+        for n in range(0, len(signal)):
+            if n < MA_win-1: # when there is no enough data points as the MA_win requires
+                input_sig = signal[0:n+1] 
+            elif n >= MA_win-1: # when there is enought data points as the MA_win requires
+                input_sig = signal[n-(MA_win-1) : n+1]   
+            MA_signal[n] = HullMovAvg(input_sig)
+
+        return MA_signal
+
+
+    # if user wants to conduct regular moving average, then look at how he want to process the early data points
+    # early data points averaged to the number of data points that is available 
+    if early_method==0:       
         for n in range(0, len(signal)):
             if n < MA_win-1:
-                MA_signal[n] = np.sum(signal[0:n]) /MA_win # when there is no enough data point as the MA_win requires
+                MA_signal[n] = np.sum(signal[0:n+1])/(n+1) # when there is no enough data point as the MA_win requires
             elif n >= MA_win-1:
-                MA_signal[n] = np.sum(signal[n-MA_win : n]) /MA_win # averga data points as required time window
+                MA_signal[n] = np.sum(signal[n-(MA_win-1) : n+1])/MA_win # averga data points as required time window
+    # early data points are always averaged to the length of time window
+    elif early_method==1:    
+        for n in range(0, len(signal)):
+            if n < MA_win-1:
+                MA_signal[n] = np.sum(signal[0:n+1])/MA_win # when there is not enough data point as the MA_win requires
+            elif n >= MA_win-1:
+                MA_signal[n] = np.sum(signal[n-(MA_win-1) : n+1])/MA_win # averga data points as required time window
 
     return MA_signal
+
+
+
+def MaxContiNum(input_array):
+    '''
+    Given a numpy array, look at the maximum number of continous digits in the array,
+    i.e. [1], maximum continous number is 1;
+         [1,2,5,6,7,8,10,4,5], maximum continous number is 4 because of [5,6,7,8]
+
+    Look at the maximum amount of continous number
+
+    input_array, must be an numpy array with positive numbers
+'''
+    
+    if len(input_array) == 0: # when the array is empty
+        max_conti_num = 0
+        return max_conti_num
+        
+    if len(input_array) == 1: # where is only one data point in the array
+        max_conti_num = 1
+        return max_conti_num
+    
+    # when the input array has more than two numbers, including two numbers
+    current_max = 1 # the maximum number of current section of number
+    max_conti_num = 1  # the maxmum number of all possible continous section of number
+    for n in range(1, len(input_array)):
+        
+        diff_val = input_array[n] - input_array[n-1]
+        if diff_val == 1:
+           current_max += 1   # update the maximum number of current section of continous number
+           max_conti_num = max(max_conti_num, current_max) # update the overall max number for all possible continous section of data
+        elif diff_val > 1: 
+           current_max = 1  # reset the current_max nubmer for next use
+    return max_conti_num
+
+
+def HullMovAvg(input_sig):
+    '''
+    Hull Moving Average  
+    More details, refer to https://alanhull.com/hull-moving-average
+    input_sig, the input signal that a user wants to conduct Hull Moving Average
+    hull_avg, the average value calculated based on the hull moving average.
+    '''
+    if len(input_sig) == 1:
+        hull_avg = input_sig
+    
+    else:
+        overall_avg = np.mean(input_sig)                  # overall average of the given signal    
+        mid_index   = math.ceil( len(input_sig)/2 )       # find the starting index of the second half of the given time series
+        second_half_avg = np.mean(input_sig[mid_index:])  # average value of the second hald time series
+        hull_avg = second_half_avg + (second_half_avg - overall_avg) # 2nd half avg value plus the difference from 2nd half to overall avg value
+
+    return hull_avg
 
 
 
@@ -1004,7 +1069,102 @@ class PlotFigure:
             
             
             
+#%%
+
+def myManualFilter(signal_raw, fs, fc, filt_type):
+    '''
+    This use the custom built filter to filter the biological signal,
+    
+    Refer this website for more information:    
+    https://www.w3.org/2011/audio/audio-eq-cookbook.html
+    
+    signal_raw, input signal
+    fs,         sampling rate
+    fc,         cutoff frequency, for band pass, this should be a 2 element array
+                [lower cutoff, higher cutoff]
+                
+    filt_type,  filter type, i.e. low, high, bandpass
+    '''
+    pi = math.pi  # constant, 3.1415926
+  
+    
+    if filt_type == 'low':
+       f0 = fc
+    elif filt_type == 'bandpass':
+        f0 = (fc[0]+fc[1])/2
+        
+    omega0 = 2*pi*(f0/fs)
+    
+    # Refer this online discussion for more details,
+    # https://dsp.stackexchange.com/questions/47522/help-with-audio-eq-cookbook-bpf-filters-and-q
+    BW = np.log2(fc[1] / fc[0]) # the same as np.log2(fc[1]) - np.log2(fc[0])
+    
+    sinh_part =  math.sinh( np.log(2)/2 * BW * (omega0/math.sin(omega0))   )
+    alpha  = math.sin(omega0) * sinh_part
+    # Q = 1/ (2*sinh_part)    # peak gain
+    # Q = 1/ (2*math.sinh(np.log(2)/2 * BW))
+    Q = 1
+    # parameters for the transfer function
+    b0 = Q*alpha
+    b1 = 0
+    b2 = -Q*alpha
+    a0 = 1 + alpha
+    a1 = -2*math.cos(omega0)
+    a2 = 1 - alpha
+    
+    # normalize the transfer function by a0
+    m0 = b0/a0
+    m1 = b1/a0
+    m2 = b2/a0
+    n1 = a1/a0
+    n2 = a2/a0
+    
+    length = len(signal_raw)  # input signal length, 1-D times series
+    signal_filt =  np.zeros(length) # define the space to hold the future filt signal
+    
+    # conduct the filtering
+    for n in range(length):
+        
+        if n == 0:
+            signal_filt[0] = m0*signal_raw[0]
             
+        elif n ==1:
+            signal_filt[1] = (m0*signal_raw[1] + m1*signal_raw[0] 
+                             - n1*signal_filt[0])     
+        else:
+           signal_filt[n] = (m0*signal_raw[n] + m1*signal_raw[n-1] + m2*signal_raw[n-2] 
+                             - n1*signal_filt[n-1] - n2*signal_filt[n-2]) 
+       
+    return signal_filt
+    
+    
+ #%%
+ 
+'''
+fs = 8000
+fc = [10, 200]
+signal_filt = myManualFilter(signal_raw, fs, fc, filt_type='bandpass')   
+    
+plt.figure()
+plt.plot(signal_raw)    
+plt.plot(signal_filt,'r') 
+    
+'''
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+           
             
             
             
