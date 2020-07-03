@@ -1,0 +1,73 @@
+# How to switch different virtual environment in spyder within Anaconda.
+
+I have created a new virtual environment called "tf_2.0", which has a 2.0 version of tensor flow. This is required from one of my projects and distinguished from the base environment.
+
+Below are some general steps how to switch between these two environment. 
+The information is copied from here:
+
+
+
+You have installed the modular mode of spyder first, if you haven't.
+
+From this webpage:
+https://github.com/spyder-ide/spyder/wiki/Working-with-packages-and-environments-in-Spyder#the-modular-approach
+
+The modular approach
+Starting with Spyder 3.3.1, you can install the modular spyder-kernels package into any Python environment (conda environment, virtualenv/venv, system Python, WinPython, etc) in which you wish to work, and then change the Python interpreter used by Spyder on its IPython consoles to point to the Python executable of that environment.
+
+This takes a small amount of preparation and configuration, but is much "lighter" and quicker than a full Spyder installation into that environment, avoids dependency conflicts, and opens up new workflow possibilities.
+
+To achieve this, follow these steps:
+
+Activate the environment (e.g. myenv) in which you'd like to work (e.g. with conda activate myenv for conda, source myenv/bin/activate or workon myenv for virtualenv/venv, etc)
+
+Install the spyder-kernels package there, with the command:
+
+conda install spyder-kernels if using conda/Anaconda,
+
+pip install spyder-kernels if using pip/virtualenv.
+
+After installing via either method, run the following command inside the same environment:
+
+python -c "import sys; print(sys.executable)"
+and copy the path returned by that command (it should end in python, pythonw, python.exe or pythonw.exe, depending on your operating system).
+
+Deactivate that environment, activate the one in which Spyder is installed (if you've installed it in its own environment) and start Spyder as you normally would.
+
+After Spyder has started, navigate to Preferences > Python Interpreter > Use the following interpreter and paste the path from Step 3 into the text box.
+
+Start a new IPython console. All packages installed in your myenv environment should be available there. If conda is used, the name of the current environment and its Python version should be displayed in Spyder's status bar, and hovering over it should display the path of the selected interpreter.
+
+Notes:
+
+In order for the Variable Explorer to be able display the built-in editors for specific data types (Numpy array, Pandas Series/DataFrame, etc) the corresponding optional Spyder dependencies (Numpy, Pandas, etc) need to be installed in Spyder's environment, not just the IPython console working env. Furthermore, this is currently also required for custom classes provided by third-party packages displayed in the Object Explorer, though future Spyder versions may remove this latter limitation.
+While Spyder should work fine without it, ensuring the Python minor version (3.6, 3.7, 3.8, etc) in Spyder's environment matches that in your working environment, if practicable, will minimize the chance of any issues.
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+Assume you have done the work above,
+
+Then, go to Tools-->Preferences-->Python interpreter
+If you want to use the default base environment, choose "Default (i.e. the same as Spyder's)";
+if you want to use the newly created enviroment, like tf_2.0 I created, 
+  choose "Use the following Python interpreter:"
+   You will also have to list where this virtual environment has been created on your local computer,
+   i.e. on my computer, it installed at "C:\Users\YourName\Anaconda3\envs\tf_2.0\python.exe"
+                
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
