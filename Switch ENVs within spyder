@@ -11,7 +11,7 @@ You have installed the modular mode of spyder first, if you haven't.
 
 From this webpage:
 https://github.com/spyder-ide/spyder/wiki/Working-with-packages-and-environments-in-Spyder#the-modular-approach
-
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 The modular approach
 Starting with Spyder 3.3.1, you can install the modular spyder-kernels package into any Python environment (conda environment, virtualenv/venv, system Python, WinPython, etc) in which you wish to work, and then change the Python interpreter used by Spyder on its IPython consoles to point to the Python executable of that environment.
 
